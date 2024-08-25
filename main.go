@@ -19,15 +19,20 @@ func main() {
 
 	defer listener.Close()
 
-	handleConnection(listener)
+	for {
 
-}
-func handleConnection(listener net.Listener) {
-	connection, err := listener.Accept()
+		connection, err := listener.Accept()
 
-	if err != nil {
-		log.Fatalf("Failed to start TCP listener: %v", err)
+		if err != nil {
+			log.Fatalf("Failed to start TCP listener: %v", err)
+		}
+
+		go handleConnection(connection)
 	}
+}
+
+func handleConnection(connection net.Conn) {
+	defer connection.Close()
 
 	buffer := make([]byte, 1024)
 
@@ -50,7 +55,6 @@ func handleConnection(listener net.Listener) {
 }
 
 func handleGetCall(fields []string, conn net.Conn) {
-	defer conn.Close()
 
 	if len(fields) > 2 {
 		requestedRescource := fields[1]
