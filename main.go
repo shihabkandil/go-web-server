@@ -4,8 +4,12 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"strings"
 )
+
+var homePage []byte
+var notFoundPage []byte
 
 func main() {
 
@@ -18,6 +22,8 @@ func main() {
 	fmt.Println("Listening...")
 
 	defer listener.Close()
+
+	loadPages()
 
 	for {
 
@@ -60,9 +66,30 @@ func handleGetCall(fields []string, conn net.Conn) {
 		requestedRescource := fields[1]
 
 		if requestedRescource == "/" {
-			conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\n Hello World!"))
+			conn.Write([]byte(formatOkStatus(homePage)))
 		} else {
-			conn.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
+			conn.Write([]byte(formatNotFoundStatus(notFoundPage)))
 		}
 	}
+}
+
+func loadPages() error {
+	var err error
+	homePage, err = os.ReadFile("./www/index.html")
+
+	if err != nil {
+		return err
+	}
+
+	notFoundPage, err = os.ReadFile("./www/404.html")
+
+	return err
+}
+
+func formatOkStatus(page []byte) string {
+	return fmt.Sprintf("HTTP/1.1 200 OK\r\n\r\n %s", string(page))
+}
+
+func formatNotFoundStatus(page []byte) string {
+	return fmt.Sprintf("HTTP/1.1 404 Not Found\r\n\r\n %s", string(page))
 }
